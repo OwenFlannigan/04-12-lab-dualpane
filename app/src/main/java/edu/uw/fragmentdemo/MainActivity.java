@@ -6,10 +6,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 public class MainActivity extends AppCompatActivity implements MoviesFragment.OnMovieSelectedListener {
 
     private static final String TAG = "MainActivity";
+    private static boolean dualPane;
 
 
     @Override
@@ -17,13 +20,29 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if((FrameLayout) findViewById(R.id.container_right) != null &&
+                ((FrameLayout) findViewById(R.id.container_right)).getVisibility() == View.VISIBLE) {
+            dualPane = true;
+        } else {
+            dualPane = false;
+        }
+
+
         MoviesFragment fragment = (MoviesFragment)getSupportFragmentManager().findFragmentByTag("MoviesFragment");
         if(fragment == null) {
             fragment = new MoviesFragment();
         }
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.container, fragment, "MoviesFragment");
+        if(!dualPane) {
+            //ft.replace(R.id.container, fragment, "MoviesFragment");
+            ft.remove(fragment);
+            ft.add(R.id.container, fragment, "MoviesFragment");
+        } else {
+            //ft.replace(R.id.container_left, fragment, "MoviesFragment");
+            ft.remove(fragment);
+            ft.add(R.id.container_left, fragment, "MoviesFragment");
+        }
         ft.commit();
     }
 
@@ -39,9 +58,16 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.On
 
         if(fragment == null){
             fragment = new MoviesFragment();
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment, null)
-                    .commit();
+            if(!dualPane) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container, fragment, "MoviesFragment")
+                        .commit();
+            } else {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container_left, fragment, "MoviesFragment")
+                        .commit();
+            }
+
         }
 
         fragment.fetchData(searchTerm);
@@ -58,10 +84,17 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.On
         DetailFragment detailFragment = new DetailFragment();
         detailFragment.setArguments(bundle);
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, detailFragment, null)
-                .addToBackStack(null)
-                .commit();
+        if(!dualPane) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, detailFragment, "DetailsFragment")
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container_right, detailFragment, "DetailsFragment")
+                    .addToBackStack(null)
+                    .commit();
+        }
 
     }
 }
